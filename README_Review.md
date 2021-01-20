@@ -175,6 +175,20 @@ http POST localhost:8088/visits matchId=5000 teacher=TEACHER visitDate=21/01/21
 ```
 ![6 visit에서선생님방문계획작성](https://user-images.githubusercontent.com/45473909/105011436-4aab8300-5a80-11eb-8d3e-5fbe98a20668.PNG)
 
+```
+# review 작성 완료 요청
+http PATCH http://localhost:8085/reviews/5000 review=GOOD status=ReviewCompleted
+```
+![스크린샷 2021-01-20 오후 1 51 57](https://user-images.githubusercontent.com/15210906/105129070-a1b86300-5b27-11eb-8ae5-4f0743c30be6.png)
+
+myPage 리뷰 확인
+
+![스크린샷 2021-01-20 오후 1 56 32](https://user-images.githubusercontent.com/15210906/105129189-e643fe80-5b27-11eb-9083-f2933fc60815.png)
+
+match 상태 확인
+
+![스크린샷 2021-01-20 오후 1 52 43](https://user-images.githubusercontent.com/15210906/105129172-daf0d300-5b27-11eb-871a-5115c0059813.png)
+
 
 ## 이벤트드리븐 아키텍쳐의 구현
 
