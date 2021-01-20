@@ -608,7 +608,7 @@ kubectl get horizontalpodautoscaler.autoscaling/review
 ```
 # 부하 발생
 kubectl exec -it pod siege -- /bin/bash
-siege -c20 -t120S -v http://visit:8080/visits/600
+siege -c50 -t60S -v http://review:8080/reviews
 ```
 
 부하에 따라 visit pod의 cpu 사용률이 증가했고, Pod Replica 수가 증가하는 것을 확인할 수 있었음
