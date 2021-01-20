@@ -269,7 +269,8 @@ public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted review
 
 ### 시간적 디커플링 / 장애격리 
 
-방문(visit) 시스템은 결제(payment) 시스템과 완전히 분리되어있으며 이벤트 수신에 따라 처리되기 때문에, 방문 시스템이 유지보수로 인해 잠시 내려간 상태라도 방문요청(match) 및 결제(payment)하는데에 문제가 없다
+리뷰(review) 시스템은 매칭(match), 방문(visit), 결제(payment) 시스템과 완전히 분리되어있으며 이벤트 수신에 따라 처리되기 때문에, 
+리뷰(review) 시스템이 유지보수로 인해 잠시 내려간 상태라도 방문요청(match) 및 결제(payment)하는데에 문제가 없다
 
 
 - 방문 서비스(visit)를 잠시 놓은 후 매칭 요청 처리
