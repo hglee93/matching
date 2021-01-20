@@ -619,18 +619,24 @@ siege -c50 -t60S -v http://review:8080/reviews
 
 ## Persistence Volume
 
-visit 컨테이너를 마이크로서비스로 배포하면서 영속성 있는 저장장치(Persistent Volume)를 적용함
+review 컨테이너를 마이크로서비스로 배포하면서 영속성 있는 저장장치(Persistent Volume)를 적용함
+
 
 • PVC 설정 확인
 
-kubectl describe pvc azure-pvc
+Default 스토리지 클래스를 갖는 azure-managed-disk라는 pvc를 생성
 
-<img width="546" alt="01-1 화면증적(decribe)" src="https://user-images.githubusercontent.com/66051393/105042326-73933e80-5aa7-11eb-8c4f-94b46c811e56.png">
+kubectl describe pvc
+
+![스크린샷 2021-01-20 오후 11 45 21](https://user-images.githubusercontent.com/15210906/105190729-a86fc600-5b79-11eb-8dc7-7f30d80d707b.png)
+
 
 • PVC Volume설정 확인
-mypage 구현체에서 해당 pvc를 volumeMount 하여 사용 (kubectl get deployment mypage -o yaml)
 
-<img width="583" alt="02 화면증적" src="https://user-images.githubusercontent.com/66051393/105042760-f87e5800-5aa7-11eb-9447-2ecb7d427623.png">
+review 구현체에서 해당 pvc를 volumeMount 하여 사용 (kubectl describe pod review-pvc)
+
+![스크린샷 2021-01-20 오후 11 43 20](https://user-images.githubusercontent.com/15210906/105191113-11573e00-5b7a-11eb-8cfa-70ba0b1e4883.png)
+
 
 • mypage pod에 접속하여 mount 용량 확인
 
