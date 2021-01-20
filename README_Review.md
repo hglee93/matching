@@ -638,10 +638,9 @@ review 구현체에서 해당 pvc를 volumeMount 하여 사용 (kubectl describe
 ![스크린샷 2021-01-20 오후 11 43 20](https://user-images.githubusercontent.com/15210906/105191113-11573e00-5b7a-11eb-8cfa-70ba0b1e4883.png)
 
 
-• mypage pod에 접속하여 mount 용량 확인
+• review-pvc pod에 접속하여 mount 용량 확인
 
-<img width="482" alt="03 mount_설정확인" src="https://user-images.githubusercontent.com/66051393/105042971-41361100-5aa8-11eb-8fa7-65efbe12fb8c.png">
-
+![스크린샷 2021-01-20 오후 11 51 45](https://user-images.githubusercontent.com/15210906/105191508-7f036a00-5b7a-11eb-8927-88a8887bf543.png)
 
 
 ## 무정지 재배포
