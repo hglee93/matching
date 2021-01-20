@@ -131,9 +131,8 @@
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다.
 
 ```
-cd payment
+cd review
 mvn spring-boot:run  
-
 ```
 
 
@@ -141,75 +140,6 @@ mvn spring-boot:run
 
 - 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: (예시는 match 마이크로 서비스). 이때 가능한 현업에서 사용하는 언어 (유비쿼터스 랭귀지)를 그대로 사용하였고, 모든 구현에 있어서 영문으로 사용하여 별다른  오류없이 구현하였다.
 
-```
-package matching;
-
-import javax.persistence.*;
-
-import matching.external.Payment;
-import matching.external.PaymentService;
-import org.springframework.beans.BeanUtils;
-import java.util.List;
-
-@Entity
-@Table(name="Match_table")
-public class Match {
-
-    @Id
-    private Long id;
-    private Integer price;
-    private String status;
-
-    @PostPersist
-    public void onPostPersist(){
-        MatchRequested matchRequested = new MatchRequested();
-        BeanUtils.copyProperties(this, matchRequested);
-        matchRequested.publishAfterCommit();
-
-        //Following code causes dependency to external APIs
-        // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
-        Payment payment = new Payment();
-        // mappings goes here
-
-        //변수 setting
-        payment.setMatchId(Long.valueOf(this.getId()));
-        payment.setPrice(Integer.valueOf(this.getPrice()));
-        payment.setPaymentAction("Approved");
-
-        MatchApplication.applicationContext.getBean(PaymentService.class)
-                .paymentRequest(payment);
-    }
-
-    @PreUpdate
-    public void onPreUpdate(){
-        if("cancel".equals(status)) {
-            MatchCanceled matchCanceled = new MatchCanceled();
-            BeanUtils.copyProperties(this, matchCanceled);
-            matchCanceled.publishAfterCommit();
-        }
-    }
-
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getPrice() {
-        return price;
-    }
-    public void setPrice(Integer price) {
-        this.price = price;
-    }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) {
-        this.status = status;
-    }
-}
-
-```
 - Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양한 데이터소스 유형 (RDB or NoSQL) 에 대한 별도의 처리가 없도록 데이터 접근 어댑터를 자동 생성하기 위하여 Spring Data REST 의 RestRepository 를 적용하였다
 ```
 package matching;
@@ -243,83 +173,6 @@ http POST localhost:8088/visits matchId=5000 teacher=TEACHER visitDate=21/01/21
 ![6 visit에서선생님방문계획작성](https://user-images.githubusercontent.com/45473909/105011436-4aab8300-5a80-11eb-8d3e-5fbe98a20668.PNG)
 
 
-
-## 동기식 호출과 Fallback 처리
-
-분석단계에서의 조건 중 하나로 접수(match)->결제(payment) 간의 호출은 동기식으로 호출하고자  동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient를 이용하여 호출하도록 한다.
-
-- 결제서비스를 호출하기 위하여 FeignClient 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현
-
-```
-# (payment) PaymentService.java
-
-package matching.external;
-
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
-import java.util.Date;
-
-@FeignClient(name="payment", url="${api.payment.url}")
-public interface PaymentService {
-
-    @RequestMapping(method= RequestMethod.POST, path="/payments")
-    public void paymentRequest(@RequestBody Payment payment);
-
-}
-```
-
-- match접수를 받은 직후(@PostPersist) 결제를 요청하도록 처리
-```
-# match.java (Entity)
-  @PostPersist
-    public void onPostPersist(){
-        MatchRequested matchRequested = new MatchRequested();
-        BeanUtils.copyProperties(this, matchRequested);
-        matchRequested.publishAfterCommit();
-
-        //Following code causes dependency to external APIs
-        // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
-        Payment payment = new Payment();
-        // mappings goes here
-
-        //변수 setting
-        payment.setMatchId(Long.valueOf(this.getId()));
-        payment.setPrice(Integer.valueOf(this.getPrice()));
-        payment.setPaymentAction("Approved");
-
-        MatchApplication.applicationContext.getBean(PaymentService.class)
-                .paymentRequest(payment);
-    }
-```
-
-- 동기식 호출에서는 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 접수도 못받는다는 것을 확인
-
-
-```
-# 결제 (payment) 서비스를 잠시 내려놓음 (ctrl+c)
-
-# 접수처리
-http localhost:8088/matches id=5005 price=50000 status=matchRequest   #Fail
-```
-![11 payment내리면match안됨](https://user-images.githubusercontent.com/45473909/105013488-a7a83880-5a82-11eb-9417-92d92668b879.PNG)
-```
-
-# payment서비스 재기동
-cd payment
-mvn spring-boot:run
-
-#match 처리
-http localhost:8088/matches id=5006 price=50000 status=matchRequest  #Success
-```
-![11 payment올리면match됨](https://user-images.githubusercontent.com/45473909/105013494-a8d96580-5a82-11eb-95de-73a47f072920.PNG)
-
-- 또한 과도한 요청시에 서비스 장애가 도미노 처럼 벌어질 수 있다. (서킷브레이커, 폴백 처리는 운영단계에서 설명한다.)
-
-
-
 ## 이벤트드리븐 아키텍쳐의 구현
 
 ### 비동기식 호출 
@@ -327,35 +180,6 @@ http localhost:8088/matches id=5006 price=50000 status=matchRequest  #Success
 결제가 완료 된 후에 방문(visit) 시스템으로 이를 알려주는 행위는 동기식이 아닌 비동기식으로 처리하며, 방문시스템의 처리를 위하여 매칭요청/결제가 블로킹 되지 않도록 처리한다.
  
 - 이를 위하여 결제요청이력에 기록을 남긴 후에 곧바로 결제 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
- 
-```
-package matching;
-
-import javax.persistence.*;
-import org.springframework.beans.BeanUtils;
-import java.util.List;
-
-@Entity
-@Table(name="Payment_table")
-public class Payment {
-
-    @Id
-    private Long matchId;
-    private Integer price;
-    private String paymentAction;
-
-    @PostPersist
-    public void onPostPersist(){
-        PaymentApproved paymentApproved = new PaymentApproved();
-        BeanUtils.copyProperties(this, paymentApproved);
-        paymentApproved.publishAfterCommit();
-
-
-    }
-
-
-```
-
 - 방문 서비스에서는 결제완료 이벤트를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
 ```
@@ -677,41 +501,6 @@ http localhost:8081/matches id=51 price=50000 status=matchRequest
 <img width="647" alt="03 CD설정_상세" src="https://user-images.githubusercontent.com/66051393/105039330-c5d26080-5aa3-11eb-8b05-cabb28c6eaf1.png">
 
 
-
-## 동기식 호출 / 서킷 브레이킹 / 장애격리
-
-
-서킷 브레이킹 프레임워크의 선택: Spring FeignClient + Hystrix 옵션을 사용하여 구현함
-시나리오는 매칭요청(match)-->결제(payment) 시의 연결을 RESTful Request/Response 로 연동하여 구현이 되어있고, 결제 요청이 과도할 경우 CB 를 통하여 장애격리.
-
-
-1. Hystrix 를 설정:  요청처리 쓰레드에서 처리시간이 600 밀리가 넘어서기 시작하여 어느정도 유지되면 CB 회로가 닫히도록 (요청을 빠르게 실패처리, 차단) 설정
-- application.yml
-<img width="766" alt="01 화면증적" src="https://user-images.githubusercontent.com/66051393/105108052-c64b1580-5afc-11eb-88a8-b37a01a87896.png">
-
-
-2. 피호출 서비스(결제:payment) 의 임의 부하 처리 - 400 밀리에서 증감 300 밀리 정도 왔다갔다 하게
-- (payment) 결제이력.java (Entity)
-<img width="763" alt="02 화면증적" src="https://user-images.githubusercontent.com/66051393/105108324-54bf9700-5afd-11eb-8883-f60bbc6c8405.png">
-
-
-3. 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
- - 동시사용자 100명
- - 60초 동안 실시
-```
- - siege -c100 -t60S -r5 -v --content-type "application/json" 'http://match:8080/matches POST {"id": 600, "price":1000, "status": "matchRequest"}' 
-```
-<img width="635" alt="03 화면증적" src="https://user-images.githubusercontent.com/66051393/105108628-ffd05080-5afd-11eb-826d-66a7b252c09a.png">
-
-서킷브레이크가 발생하지 않아 아래와 같이 여러 조건으로 부하테스트를 진행하였으나, 500 에러를 발견할 수 없었음
-
-```
- - siege -c255 -t1M -r5 -v --content-type "application/json" 'http://match:8080/matches POST {"id": 600, "price":1000, "status": "matchRequest"}' 
- 
- - siege -c255 -t2M -r5 -v --content-type "application/json" 'http://match:8080/matches POST {"id": 600, "price":1000, "status": "matchRequest"}' 
-```
-
-
 ## 오토스케일 아웃
 
 앞서 CB 는 시스템을 안정되게 운영할 수 있게 해줬지만 사용자의 요청을 100% 받아들여주지 못했기 때문에 이에 대한 보완책으로 자동화된 확장 기능을 적용하고자 한다.
@@ -750,17 +539,6 @@ mypage 구현체에서 해당 pvc를 volumeMount 하여 사용 (kubectl get depl
 
 <img width="482" alt="03 mount_설정확인" src="https://user-images.githubusercontent.com/66051393/105042971-41361100-5aa8-11eb-8fa7-65efbe12fb8c.png">
 
-
-## Self_healing (liveness probe)
-mypage구현체의 deployment.yaml 소스 서비스포트를 8080이 아닌 고의로 8081로 변경하여 재배포한 후 pod 상태 확인
-
-• 정상 서비스포트 확인
-
-<img width="557" alt="01 증적자료" src="https://user-images.githubusercontent.com/66051393/105043345-c4effd80-5aa8-11eb-83db-df351905d102.png">
-
-• 비정상 상태의 pod 정보 확인
-
-<img width="581" alt="03 증적자료_POD비정상으로재기동" src="https://user-images.githubusercontent.com/66051393/105043596-0ed8e380-5aa9-11eb-9c46-dabe5736df9c.png">
 
 
 ## 무정지 재배포
