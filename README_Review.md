@@ -273,7 +273,7 @@ public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted review
 리뷰(review) 시스템이 유지보수로 인해 잠시 내려간 상태라도 방문요청(match) 및 결제(payment)하는데에 문제가 없다
 
 
-- 방문 서비스(visit)를 잠시 놓은 후 매칭 요청 처리
+- 리뷰 서비스(review)를 잠시 놓은 후 매칭 요청 처리
 ```
 # 매칭요청 처리
 http POST http://localhost:8081/matches id=101 price=5000 status=matchRequest   #Success
@@ -286,19 +286,18 @@ http http://localhost:8083/payments   #Success
 ```
 ![image](https://user-images.githubusercontent.com/75401933/105035459-5efe7880-5a9e-11eb-9e60-d824d2f1a4cc.png)
 
-- 방문 서비스 다시 가동
+- 리뷰 서비스 다시 가동
 ```
-cd visit
+cd review
 mvn spring-boot:run
 ```
 
-- 가동 전/후의 방문상태 확인
+- 가동 전/후의 리뷰상태 확인
 ```
 # 신규 접수된 매칭요청건에 대해 선생님과 방문일자 매칭
-http POST http://localhost:8082/visits matchId=101 teacher=Smith visitDate=20210101 
+http POST http://localhost:8085/visits matchId=101 teacher=Smith visitDate=20210101 
 http localhost:8082/visits     
 ```
-![image](https://user-images.githubusercontent.com/75401933/105036115-65412480-5a9f-11eb-8cf8-ea4e46376a46.png)
 
 
 ### SAGA / Corelation
