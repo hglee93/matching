@@ -310,8 +310,8 @@ http localhost:8085/review
 ### SAGA / Corelation
 
 리뷰(review) 시스템에서 상태가 리뷰작성 완료로 변경되면 
-1) 매치(match) 시스템 원천데이터의 상태(status) 정보가 update된다.
-2) 마이페이지 시스템의 상태가 변경된다.
+1) 마이페이지 시스템의 상태가 변경된다. 
+2) 매치(match) 시스템 원천데이터의 상태(status) 정보가 update된다.
 
 ```
 # 마이페이지 이벤트 핸들러
@@ -357,7 +357,6 @@ public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted review
 
 ```
 # mypage > PolicyHandler.java
-
 @StreamListener(KafkaProcessor.INPUT)
 public void wheneverVisitCanceled_(@Payload VisitCanceled visitCanceled){
 
@@ -431,19 +430,35 @@ public void wheneverMatchCanceled_(@Payload MatchCanceled matchCanceled){
 
     }
 }
-    
+
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted){
+
+    if(reviewCompleted.isMe()){
+        System.out.println("##### listener  : " + reviewCompleted.toJson());
+
+        MyPageRepository.findById(reviewCompleted.getMatchId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverMatchCanceled_MyPageRepository.findById : exist" );
+            MyPage.setReview(reviewCompleted.getReview());
+            MyPage.setStatus(reviewCompleted.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+            MyPageRepository.save(MyPage);
+        });
+    }
+}
+
 ```
+
 - mypage의 view로 조회
 
-![image](https://user-images.githubusercontent.com/75401933/105024191-21462380-5a8f-11eb-8abc-b169dd9d8c3a.png)
+![스크린샷 2021-01-20 오후 1 56 32](https://user-images.githubusercontent.com/15210906/105129189-e643fe80-5b27-11eb-9083-f2933fc60815.png)
 
 
 ## 폴리글랏 퍼시스턴스
 
-match 는 다른 서비스와 구별을 위해 별도 hsqldb를 사용 하였다. 이를 위해 match내 pom.xml에 dependency를 h2database에서 hsqldb로 변경 하였다.
+review는 다른 서비스와 구별을 위해 별도 hsqldb를 사용 하였다. 이를 위해 review내 pom.xml에 dependency를 h2database에서 hsqldb로 변경 하였다.
 
 ```
-#match의 pom.xml dependency를 수정하여 DB변경
+#review의 pom.xml dependency를 수정하여 DB변경
 
   <!--
   <dependency>
@@ -479,19 +494,23 @@ spring:
         - id: match
           uri: http://localhost:8081
           predicates:
-            - Path=/matches/**
+            - Path=/matches/** /teacherLists/**
         - id: visit
           uri: http://localhost:8082
           predicates:
-            - Path=/visits/**,/visitReqLists/**
+            - Path=/visits/** /visitReqLists/**
         - id: payment
           uri: http://localhost:8083
           predicates:
-            - Path=/payments/**
+            - Path=/payments/** 
         - id: mypage
           uri: http://localhost:8084
           predicates:
-            - Path=/myPages/**,/myPages/**
+            - Path= /myPages/**
+        - id: review
+            uri: http://localhost:8085
+            predicates:
+              - Path= /reviews/**
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -513,32 +532,43 @@ spring:
         - id: match
           uri: http://match:8080
           predicates:
-            - Path=/matches/**
+            - Path=/matches/** /teacherLists/**
         - id: visit
           uri: http://visit:8080
           predicates:
-            - Path=/visits/**,/visitReqLists/**
+            - Path=/visits/** /visitReqLists/**
         - id: payment
           uri: http://payment:8080
           predicates:
-            - Path=/payments/**
+            - Path=/payments/** 
         - id: mypage
           uri: http://mypage:8080
           predicates:
-            - Path=/myPages/**,/myPages/**
+            - Path= /myPages/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080
+
 ```
 
-- Gateway 서비스 실행 상태에서 8088과 8081로 각각 서비스 실행하였을 때 동일하게 match 서비스 실행되었다.
+- Gateway 서비스 실행 상태에서 8088과 8085로 각각 서비스 실행하였을 때 동일하게 review 서비스 실행되었다.
 ```
-http localhost:8088/matches id=50 price=50000 status=matchRequest
+http http://localhost:8088/reviews/5000
 ```
-![8088포트](https://user-images.githubusercontent.com/45473909/105039570-0f22b000-5aa4-11eb-9090-45662dcd79d0.PNG)
 
 ```
-http localhost:8081/matches id=51 price=50000 status=matchRequest
+http localhost:8085/reviews/5000
 ```
-![8081포트](https://user-images.githubusercontent.com/45473909/105039551-0a5dfc00-5aa4-11eb-86c0-c3fc63d5b0f6.PNG)
-
 
 
 # 운영
