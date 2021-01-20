@@ -306,47 +306,49 @@ http localhost:8085/review
 ```
 ![스크린샷 2021-01-20 오후 1 51 57](https://user-images.githubusercontent.com/15210906/105129070-a1b86300-5b27-11eb-8ae5-4f0743c30be6.png)
 
+
 ### SAGA / Corelation
 
-방문(visit) 시스템에서 상태가 방문확정 또는 방문취소로 변경되면 매치(match) 시스템 원천데이터의 상태(status) 정보가 update된다.  
+리뷰(review) 시스템에서 상태가 리뷰작성 완료로 변경되면 
+1) 매치(match) 시스템 원천데이터의 상태(status) 정보가 update된다.
+2) 마이페이지 시스템의 상태가 변경된다.
 
 ```
-# mypage > PolicyHandler.java
+# 마이페이지 이벤트 핸들러
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted){
 
-  @StreamListener(KafkaProcessor.INPUT)
-  public void wheneverVisitAssigned_(@Payload VisitAssigned visitAssigned){
+    if(reviewCompleted.isMe()){
+        System.out.println("##### listener  : " + reviewCompleted.toJson());
 
-      if(visitAssigned.isMe()){
-          System.out.println("##### listener wheneverVisitAssigned  : " + visitAssigned.toJson());
-
-          //방문 assign 이벤트를 수신하였을 때 해당 ID를 찾아서 상태값을 visitAssigned로 변경
-          MatchRepository.findById(visitAssigned.getMatchId()).ifPresent(Match ->{
-              System.out.println("##### wheneverVisitAssigned_MatchRepository.findById : exist" );
-
-              Match.setStatus(visitAssigned.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
-              MatchRepository.save(Match);
-          });
-
-      }
-  }
-
-
-  @StreamListener(KafkaProcessor.INPUT)
-  public void wheneverVisitCanceled_(@Payload VisitCanceled visitCanceled) {
-
-      if (visitCanceled.isMe()) {
-          System.out.println("##### listener  : " + visitCanceled.toJson());
-
-          //방문취소 이벤트를 수신하였을 때 해당 ID를 찾아서 상태값을 visitCanceled로 변경
-          MatchRepository.findById(visitCanceled.getMatchId()).ifPresent(Match -> {
-              System.out.println("##### wheneverVisitCanceled_MatchRepository.findById : exist");
-              Match.setStatus(visitCanceled.getEventType());
-              MatchRepository.save(Match);
-          });
-      }
-  }
+        MyPageRepository.findById(reviewCompleted.getMatchId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverMatchCanceled_MyPageRepository.findById : exist" );
+            MyPage.setReview(reviewCompleted.getReview());
+            MyPage.setStatus(reviewCompleted.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+            MyPageRepository.save(MyPage);
+        });
+    }
+}
+```
+![스크린샷 2021-01-20 오후 1 56 32](https://user-images.githubusercontent.com/15210906/105129189-e643fe80-5b27-11eb-9083-f2933fc60815.png)
 
 ```
+#  이벤트 핸들러
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted) {
+    if (reviewCompleted.isMe()) {
+        System.out.println("##### listener  : " + reviewCompleted.toJson());
+
+        MatchRepository.findById(reviewCompleted.getMatchId()).ifPresent(Match -> {
+            System.out.println("##### wheneverVisitCanceled_MatchRepository.findById : exist");
+            Match.setStatus(reviewCompleted.getEventType());
+            MatchRepository.save(Match);
+        });
+    }
+}
+```
+![스크린샷 2021-01-20 오후 1 52 43](https://user-images.githubusercontent.com/15210906/105129172-daf0d300-5b27-11eb-871a-5115c0059813.png)
+
 
 
 ### CQRS
