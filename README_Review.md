@@ -617,9 +617,6 @@ siege -c20 -t120S -v http://visit:8080/visits/600
 
 
 
-부하에 따라 visit pod의 cpu 사용률이 증가했고, Pod Replica 수가 증가하는 것을 확인할 수 있었음
-
-
 ## Persistence Volume
 
 visit 컨테이너를 마이크로서비스로 배포하면서 영속성 있는 저장장치(Persistent Volume)를 적용함
