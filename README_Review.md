@@ -591,17 +591,33 @@ pipeline build script 는 각 프로젝트 폴더 이하에 deployment.yml, serv
 
 visit 구현체에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 10프로를 넘어서면 replica 를 10개까지 늘려준다:
 
-kubectl autoscale deploy visit --min=1 --max=10 --cpu-percent=15
+```
+# AutoScale Out 설정
+kubectl autoscale deploy review --min=1 --max=10 --cpu-percent=10
+```
+```
+# HPA 확인 및 기존 Replicas 수 확인
+kubectl get horizontalpodautoscaler.autoscaling/review
+```
 
-<img width="504" alt="01 화면증적" src="https://user-images.githubusercontent.com/66051393/105040263-f8308d80-5aa4-11eb-9686-0afedeaa5a48.png">
+![스크린샷 2021-01-20 오후 10 34 22](https://user-images.githubusercontent.com/15210906/105182582-8b82c500-5b70-11eb-91cc-5e10a59f3a1a.png)
+
+![스크린샷 2021-01-20 오후 10 18 06](https://user-images.githubusercontent.com/15210906/105182673-a9e8c080-5b70-11eb-9cc8-736ffa73fe4d.png)
 
 
+```
+# 부하 발생
 kubectl exec -it pod siege -- /bin/bash
 siege -c20 -t120S -v http://visit:8080/visits/600
+```
 
 부하에 따라 visit pod의 cpu 사용률이 증가했고, Pod Replica 수가 증가하는 것을 확인할 수 있었음
 
-<img width="536" alt="02 화면증적" src="https://user-images.githubusercontent.com/66051393/105040477-3cbc2900-5aa5-11eb-94b8-7f2eb33102fa.png">
+![스크린샷 2021-01-20 오후 10 12 50](https://user-images.githubusercontent.com/15210906/105182806-d270ba80-5b70-11eb-8760-d8774228ba33.png)
+
+
+
+부하에 따라 visit pod의 cpu 사용률이 증가했고, Pod Replica 수가 증가하는 것을 확인할 수 있었음
 
 
 ## Persistence Volume
