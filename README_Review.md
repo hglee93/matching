@@ -565,10 +565,13 @@ server:
 ```
 http http://localhost:8088/reviews/5000
 ```
+![스크린샷 2021-01-20 오후 3 18 00](https://user-images.githubusercontent.com/15210906/105135168-eb5a7b00-5b32-11eb-892e-7cd6f481e15f.png)
 
 ```
 http localhost:8085/reviews/5000
 ```
+![스크린샷 2021-01-20 오후 3 18 16](https://user-images.githubusercontent.com/15210906/105135203-fb725a80-5b32-11eb-8036-592ea7cb4bc3.png)
+
 
 
 # 운영
