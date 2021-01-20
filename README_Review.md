@@ -181,12 +181,16 @@ http PATCH http://localhost:8085/reviews/5000 review=GOOD status=ReviewCompleted
 ```
 ![스크린샷 2021-01-20 오후 1 51 57](https://user-images.githubusercontent.com/15210906/105129070-a1b86300-5b27-11eb-8ae5-4f0743c30be6.png)
 
-myPage 리뷰 확인
-
+```
+# myPage 리뷰 확인
+http http://localhost:8084/myPages/5000
+```
 ![스크린샷 2021-01-20 오후 1 56 32](https://user-images.githubusercontent.com/15210906/105129189-e643fe80-5b27-11eb-9083-f2933fc60815.png)
 
-match 상태 확인
-
+```
+# match 상태 확인
+http http://localhost:8081/matches/5000
+```
 ![스크린샷 2021-01-20 오후 1 52 43](https://user-images.githubusercontent.com/15210906/105129172-daf0d300-5b27-11eb-871a-5115c0059813.png)
 
 
