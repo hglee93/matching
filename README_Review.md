@@ -110,7 +110,7 @@
 
 ## Event Storming 결과
 * MSAEz 로 모델링한 이벤트스토밍 결과:  
-
+![스크린샷 2021-01-20 오후 1 33 22](https://user-images.githubusercontent.com/15210906/105127551-7aac6200-5b24-11eb-9387-ce973219c9fb.png)
 ### 최종 이벤트스토밍 결과
 
 ```
