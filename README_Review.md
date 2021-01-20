@@ -229,8 +229,42 @@ public class PolicyHandler{
 
 2) 리뷰작성이 완료 된 후에 리뷰(review) 시스템은 매칭, 마이페이지 시스템에 이를 알려주며, 비동기 방식으로 처리하여 매칭요청/결제가 블로킹 되지 않도록 처리한다.
 
-- 이를 위하여 방문배정이력에 기록을 남긴 후에 곧바로 방문배정 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
-- 리뷰 서비스에서는 방문배정 이벤트를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+- 이를 위하여 리뷰이력에 기록을 남긴 후에 곧바로 리뷰작성 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+- 매칭, 마이페이지 서비스에서는 리뷰완료 이벤트를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+
+```
+# 마이페이지 이벤트 핸들러
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted){
+
+    if(reviewCompleted.isMe()){
+        System.out.println("##### listener  : " + reviewCompleted.toJson());
+
+        MyPageRepository.findById(reviewCompleted.getMatchId()).ifPresent(MyPage ->{
+            System.out.println("##### wheneverMatchCanceled_MyPageRepository.findById : exist" );
+            MyPage.setReview(reviewCompleted.getReview());
+            MyPage.setStatus(reviewCompleted.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+            MyPageRepository.save(MyPage);
+        });
+    }
+}
+```
+
+```
+#  이벤트 핸들러
+@StreamListener(KafkaProcessor.INPUT)
+public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted) {
+    if (reviewCompleted.isMe()) {
+        System.out.println("##### listener  : " + reviewCompleted.toJson());
+
+        MatchRepository.findById(reviewCompleted.getMatchId()).ifPresent(Match -> {
+            System.out.println("##### wheneverVisitCanceled_MatchRepository.findById : exist");
+            Match.setStatus(reviewCompleted.getEventType());
+            MatchRepository.save(Match);
+        });
+    }
+}
+```
 
 
 ### 시간적 디커플링 / 장애격리 
