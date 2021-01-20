@@ -198,26 +198,16 @@ http http://localhost:8081/matches/5000
 
 ### 비동기식 호출 
 
-결제가 완료 된 후에 방문(visit) 시스템으로 이를 알려주는 행위는 동기식이 아닌 비동기식으로 처리하며, 방문시스템의 처리를 위하여 매칭요청/결제가 블로킹 되지 않도록 처리한다.
- 
-- 이를 위하여 결제요청이력에 기록을 남긴 후에 곧바로 결제 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
-- 방문 서비스에서는 결제완료 이벤트를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+1) 방문배정이 완료 된 후에 방문(visit) 시스템은 리뷰(review) 시스템에 이를 알려주며, 비동기 방식으로 처리하여 매칭요청/결제가 블로킹 되지 않도록 처리한다.
+
+- 이를 위하여 방문배정이력에 기록을 남긴 후에 곧바로 방문배정 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+- 리뷰 서비스에서는 방문배정 이벤트를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
 ```
-package matching;
-
-import matching.config.kafka.KafkaProcessor;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.annotation.StreamListener;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Service;
-
 @Service
 public class PolicyHandler{
-    @Autowired VisitReqListRepository VisitReqListRepository;
-    @Autowired VisitRepository VisitRepository;
+    @Autowired
+    ReviewRepository reviewRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
     public void onStringEventListener(@Payload String eventString){
@@ -225,23 +215,22 @@ public class PolicyHandler{
     }
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void wheneverPaymentApproved_(@Payload PaymentApproved paymentApproved){
-
-        if(paymentApproved.isMe()){
-            System.out.println("##### listener  : " + paymentApproved.toJson());
-
-
-            //승인완료 시 승인완료된 리스트를 visitReqList에 받아서 보여줄 수 있도록 id setting
-
-            VisitReqList visitReqList = new VisitReqList();
-
-            visitReqList.setId(paymentApproved.getMatchId());
-            VisitReqListRepository.save(visitReqList);
-
+    public void wheneverVisitAssigned_ReviewGenerate(@Payload VisitAssigned visitAssigned){
+        if(visitAssigned.isMe()){
+            System.out.println("##### listener  : " + visitAssigned.toJson());
+            Review review = new Review();
+            review.setMatchId(visitAssigned.getMatchId());
+            review.setStatus("Reviewing");
+            reviewRepository.save(review);
         }
     }
-
+}
 ```
+
+2) 리뷰작성이 완료 된 후에 리뷰(review) 시스템은 매칭, 마이페이지 시스템에 이를 알려주며, 비동기 방식으로 처리하여 매칭요청/결제가 블로킹 되지 않도록 처리한다.
+
+- 이를 위하여 방문배정이력에 기록을 남긴 후에 곧바로 방문배정 완료 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+- 리뷰 서비스에서는 방문배정 이벤트를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
 
 ### 시간적 디커플링 / 장애격리 
