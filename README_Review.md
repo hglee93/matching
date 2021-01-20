@@ -276,15 +276,22 @@ public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted review
 - 리뷰 서비스(review)를 잠시 놓은 후 매칭 요청 처리
 ```
 # 매칭요청 처리
-http POST http://localhost:8081/matches id=101 price=5000 status=matchRequest   #Success
+http POST http://localhost:8081/matches id=5000 price=50000 status=matchRequest   #Success
 ```
-![image](https://user-images.githubusercontent.com/75401910/105030156-bd275d80-5a96-11eb-87d0-7c16955c76ff.PNG)
+![1 match에서명령어날림](https://user-images.githubusercontent.com/45473909/105010823-898d0900-5a7f-11eb-82b3-ab7163311364.PNG)
 
 - 결제서비스가 정상적으로 조회되었는지 확인
 ```
-http http://localhost:8083/payments   #Success
+http http://localhost:8083/payments/5000   #Success
 ```
-![image](https://user-images.githubusercontent.com/75401933/105035459-5efe7880-5a9e-11eb-9e60-d824d2f1a4cc.png)
+![3 payment에서match에서날린데이터확인](https://user-images.githubusercontent.com/45473909/105011427-48e1bf80-5a80-11eb-9c95-e3d2e760e931.PNG)
+
+- 방문서비스가 정상적으로 동작하는지 확인
+```
+http POST http://localhost:8082/visit matchId=5000 teacher=TEACHER visitDate=21/01/21
+http http://localhost:8082/visit/5000   #Success
+```
+![6 visit에서선생님방문계획작성](https://user-images.githubusercontent.com/45473909/105011436-4aab8300-5a80-11eb-8d3e-5fbe98a20668.PNG)
 
 - 리뷰 서비스 다시 가동
 ```
@@ -294,11 +301,10 @@ mvn spring-boot:run
 
 - 가동 전/후의 리뷰상태 확인
 ```
-# 신규 접수된 매칭요청건에 대해 선생님과 방문일자 매칭
-http POST http://localhost:8085/visits matchId=101 teacher=Smith visitDate=20210101 
-http localhost:8082/visits     
+http PATCH http://localhost:8085/review/5000 review=GOOD status=ReviewCompleted 
+http localhost:8085/review
 ```
-
+![스크린샷 2021-01-20 오후 1 51 57](https://user-images.githubusercontent.com/15210906/105129070-a1b86300-5b27-11eb-8ae5-4f0743c30be6.png)
 
 ### SAGA / Corelation
 
