@@ -14,45 +14,42 @@ public class MyPage {
     private String teacher;
     private String visitDate;
     private String status;
-
+    private String review;
 
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
+
     public Integer getPrice() {
         return price;
     }
-
     public void setPrice(Integer price) {
         this.price = price;
     }
+
     public String getTeacher() {
         return teacher;
     }
-
     public void setTeacher(String teacher) {
         this.teacher = teacher;
     }
+
     public String getVisitDate() {
         return visitDate;
     }
-
     public void setVisitDate(String visitDate) {
         this.visitDate = visitDate;
     }
+
     public String getStatus() {
         return status;
     }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-
-
+    public String getReview() { return review; }
+    public void setReview(String review) { this.review = review; }
 
 }

@@ -91,4 +91,19 @@ public class PolicyHandler{
         }
     }
 
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted){
+
+        if(reviewCompleted.isMe()){
+            System.out.println("##### listener  : " + reviewCompleted.toJson());
+
+            MyPageRepository.findById(reviewCompleted.getMatchId()).ifPresent(MyPage ->{
+                System.out.println("##### wheneverMatchCanceled_MyPageRepository.findById : exist" );
+                MyPage.setReview(reviewCompleted.getReview());
+                MyPage.setStatus(reviewCompleted.getEventType()); //상태값은 모두 이벤트타입으로 셋팅함
+                MyPageRepository.save(MyPage);
+            });
+        }
+    }
+
 }

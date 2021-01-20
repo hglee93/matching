@@ -28,7 +28,6 @@ public class PolicyHandler{
             PaymentRepository.findById(matchCanceled.getId()).ifPresent(Payment ->{
                 Payment.setPaymentAction("Cancel");
                 PaymentRepository.save(Payment);
-//                PaymentRepository.delete(payment);  //매칭 취소요청이 오면 payment삭제
             });
 
         }

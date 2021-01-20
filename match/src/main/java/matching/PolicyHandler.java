@@ -39,10 +39,22 @@ public class PolicyHandler{
         if (visitCanceled.isMe()) {
             System.out.println("##### listener  : " + visitCanceled.toJson());
 
-//            MyPage mypage = new MyPage();
             MatchRepository.findById(visitCanceled.getMatchId()).ifPresent(Match -> {
                 System.out.println("##### wheneverVisitCanceled_MatchRepository.findById : exist");
                 Match.setStatus(visitCanceled.getEventType());
+                MatchRepository.save(Match);
+            });
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverReviewCompleted_StatusUpdate(@Payload ReviewCompleted reviewCompleted) {
+        if (reviewCompleted.isMe()) {
+            System.out.println("##### listener  : " + reviewCompleted.toJson());
+
+            MatchRepository.findById(reviewCompleted.getMatchId()).ifPresent(Match -> {
+                System.out.println("##### wheneverVisitCanceled_MatchRepository.findById : exist");
+                Match.setStatus(reviewCompleted.getEventType());
                 MatchRepository.save(Match);
             });
         }
