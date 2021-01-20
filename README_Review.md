@@ -579,11 +579,9 @@ http localhost:8085/reviews
 ## CI/CD 설정
 각 구현체들은 각자의 source repository 에 구성되었고, 사용한 CI/CD 플랫폼은 Azure를 사용하였으며, pipeline build script 는 각 프로젝트 폴더 이하에 deployment.yml, service.yml 에 포함되었다
 
-<img width="678" alt="01 CI설정" src="https://user-images.githubusercontent.com/66051393/105039224-a4717480-5aa3-11eb-9d28-99fa5a809750.png">
+![스크린샷 2021-01-20 오후 8 56 01](https://user-images.githubusercontent.com/15210906/105171824-0a243600-5b62-11eb-8a84-ab01452aab8d.png)
 
-<img width="886" alt="02 CD설정" src="https://user-images.githubusercontent.com/66051393/105039282-b521ea80-5aa3-11eb-94c3-1ec50475300d.png">
-
-<img width="647" alt="03 CD설정_상세" src="https://user-images.githubusercontent.com/66051393/105039330-c5d26080-5aa3-11eb-8b05-cabb28c6eaf1.png">
+![스크린샷 2021-01-20 오후 8 56 14](https://user-images.githubusercontent.com/15210906/105171833-0db7bd00-5b62-11eb-97c1-fa9b8a2b8271.png)
 
 
 ## 오토스케일 아웃
