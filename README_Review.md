@@ -659,6 +659,6 @@ siege -c10 -t30S -r10 --content-type "application/json" 'http://match:8080/match
 1. 배포기간중 Availability 가 평소 100%에서 80% 대로 떨어지는 것을 확인. 원인은 쿠버네티스가 성급하게 새로 올려진 서비스를 READY 상태로 인식하여 서비스 유입을 진행한 것이기 때문. 이를 막기위해 Readiness Probe 를 설정함:
 1. CI/CD를 통해 새로운 배포 시작
 1. 동일한 시나리오로 재배포 한 후 Availability 확인:
-![image](https://user-images.githubusercontent.com/75401933/105041119-f4e9d180-5aa5-11eb-9afb-e7af9c06fcce.png)
+![스크린샷 2021-01-21 오전 9 39 57](https://user-images.githubusercontent.com/15210906/105258273-b7cc2f00-5bcc-11eb-902d-602ec0ed155c.png)
 
 배포기간 동안 Availability 가 변화없기 때문에 무정지 재배포가 성공한 것으로 확인됨.
